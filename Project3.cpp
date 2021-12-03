@@ -33,9 +33,9 @@ public:
     //Overloaded the functions to either traverse the whole graph from initial vertex inserted, or from specified position 
     vector<pair<int, int>> Dijkstra(int start);
     vector<int> BFS();
-    vector<int> BFS(int start, int target);
+    vector<int> BFS(int start, vector<int>& pred, vector<int>& dist);
     vector<int> DFS();
-    vector<int> DFS(int start, int target);
+    vector<int> DFS(int start, vector<int>& pred, vector<int>& dist);
     //returns the degree of a vertex. Since undirected, in degree = out degree
     vector<int> degree();
     //returns the vertex with the highest degree
@@ -43,8 +43,6 @@ public:
     unordered_map<string, int> getMapping() { return mapping; };
     //prints the vertex and the string associated with that vertex
     void printMapping();
-    //Will show if there is an edge between 2 nodes
-    bool isConnected(int from, int to);
 };
 
 void Graph::insertEdge(string from, string to)
@@ -54,14 +52,14 @@ void Graph::insertEdge(string from, string to)
         mapping[from] = numVertices;
         numVertices++;
     }
-  
+
     if (mapping.find(to) == mapping.end())
     {
         mapping[to] = numVertices;
         numVertices++;
     }
     bool from1 = true, to1 = true;
-   
+
     adjList[mapping[from]].insert(mapping[to]);
     adjList[mapping[to]].insert(mapping[from]);
 
@@ -87,10 +85,10 @@ void Graph::printGraph()
 
 
 //Dijkstra with any start vertex
-vector<pair<int,int>> Graph::Dijkstra(int start)
+vector<pair<int, int>> Graph::Dijkstra(int start)
 {
     //initialize vector of solutions and vector of nodes visited
-    vector<pair<int,int>> distances;
+    vector<pair<int, int>> distances;
     distances.resize(numVertices);
     vector<bool> visited;
     visited.resize(numVertices);
@@ -172,11 +170,13 @@ vector<int> Graph::BFS()
 }
 
 //Overloaded to start from a start vertex until it reaches the target
-vector<int> Graph::BFS(int start, int target)
+vector<int> Graph::BFS(int start, vector<int>& pred, vector<int>& dist)
 {
     queue<int> q;
     vector<bool> visited;
     vector<int> sol;
+
+
     for (int i = 0; i < numVertices; i++)
         visited.push_back(0);
     visited[start] = 1;
@@ -192,11 +192,8 @@ vector<int> Graph::BFS(int start, int target)
             {
                 q.push(i);
                 visited[i] = 1;
-            }
-            if (i == target)
-            {
-                sol.push_back(i);
-                return sol;
+                pred[i] = curr;
+                dist[i] = dist[curr] + 1;
             }
         }
     }
@@ -220,7 +217,7 @@ vector<int> Graph::DFS()
         s.pop();
         for (int i : adjList[curr])
         {
-            
+
             if (!visited[i])
             {
                 s.push(i);
@@ -232,7 +229,7 @@ vector<int> Graph::DFS()
 }
 
 //Overloaded to start from a start vertex until it reaches the target
-vector<int> Graph::DFS(int start, int target)
+vector<int> Graph::DFS(int start, vector<int>& pred, vector<int>& dist)
 {
     stack<int> s;
     vector<bool> visited;
@@ -252,11 +249,8 @@ vector<int> Graph::DFS(int start, int target)
             {
                 s.push(i);
                 visited[i] = 1;
-            }
-            if (i == target)
-            {
-                sol.push_back(i);
-                return sol;
+                pred[i] = curr;
+                dist[i] = dist[curr] + 1;
             }
         }
     }
@@ -289,15 +283,6 @@ void Graph::printMapping()
 {
     for (auto iter = mapping.begin(); iter != mapping.end(); iter++)
         cout << "Vertex as read in: " << (*iter).first << "     Assigned Vertex number: " << (*iter).second << endl;
-}
-
-//Shows if two vertices are adjacent
-bool Graph::isConnected(int from, int to)
-{
-    for (int vertex : adjList[from])
-        if (vertex == to)
-            return true;
-    return false;
 }
 //reads in the .edges file
 void loadFromFile(string filename, Graph& graph) {
@@ -368,15 +353,7 @@ void statistics(Graph& graph)
 }
 
 void printMenu() {
-    cout << "Please Select a Menu Option:" << endl;
-    cout << "1) Print Graph" << endl;
-    cout << "2) Dijkstra's Path" << endl;
-    cout << "3) BFS" << endl;
-    cout << "4) DFS" << endl;
-    cout << "5) Degree of Each Vertex" << endl;
-    cout << "6) Statistics" << endl;
-    cout << "7) Print Vertex Name and Corresponding Number" << endl;
-    cout << "8) Exit\n" << endl;
+    cout << "Please Select a Menu Option:\n1) Print Graph\n2) Djikstra's Path\n3) BFS\n4) DFS\n5) Degree \n6) Statistics\n7) Print mapping of vertices\n8) Exit\n\n";
 }
 
 int main()
@@ -400,6 +377,7 @@ int main()
         {
             bool valid = false;
             int start = 0;
+            int end = 0;
             while (!valid)
             {
                 cout << "What is the starting vertex: ";
@@ -408,14 +386,41 @@ int main()
                     valid = true;
                 else
                     cout << "This is not a valid vertex, try again." << endl;
+
+                cout << "What is the end vertex: ";
+                cin >> end;
+                if (end < graph.getNumvertices() && end >= 0)
+                    valid = true;
+                else
+                {
+                    cout << "This is not a valid end vertex, try again." << endl;
+                    continue;
+                }
             }
-            vector<pair<int,int>> distances = graph.Dijkstra(start);
-            cout << "Vertices   " << '|' << setfill(' ') << setw(23) << "Distances from " << start << setfill(' ') << setw(7-to_string(start).length()) << "|" << setfill(' ') << setw(20) << "Previous Vertex" << endl;
+            vector<pair<int, int>> distances = graph.Dijkstra(start);
+
+            int nextNode = end;
+            vector<int> path;
+            path.push_back(nextNode);
+            cout << "The path found from " << start << " to " << end << " was: " << endl;
+
+            while (nextNode != start) {
+                nextNode = distances[nextNode].second;
+                path.push_back(nextNode);
+            }
+            for (int i = path.size() - 1; i > 0; i--) {
+                cout << path[i] << " -> ";
+            }
+            cout << path[0];
+
+            cout << "\n\n\nHere are the distances and paths to all other nodes in the graph: \n\n";
+
+            cout << "Vertices   " << '|' << setfill(' ') << setw(23) << "Distances from " << start << setfill(' ') << setw(7 - to_string(start).length()) << "|" << setfill(' ') << setw(20) << "Previous Vertex" << endl;
             for (unsigned int i = 0; i < distances.size(); i++)
             {
                 cout << i << setfill(' ') << setw(12 - to_string(i).length());
                 cout << '|' << setfill(' ') << setw(15) << distances[i].first;
-                cout  <<  setfill(' ') << setw(15) << '|' << setfill(' ') << setw(15)  << distances[i]. second << endl;
+                cout << setfill(' ') << setw(15) << '|' << setfill(' ') << setw(15) << distances[i].second << endl;
             }
             break;
         }
@@ -435,16 +440,44 @@ int main()
                     cout << "This is not a valid start vertex, try again." << endl;
                     continue;
                 }
+
                 cout << "What is the end vertex: ";
                 cin >> end;
                 if (end < graph.getNumvertices() && end >= 0)
-                    endValid = true;
+                    startValid = true;
                 else
+                {
                     cout << "This is not a valid end vertex, try again." << endl;
+                    continue;
+                }
             }
-            vector<int> BFS = graph.BFS(start, end);
-            for (int i : BFS)
-                cout << i << endl;
+            vector<int> pred(graph.getNumvertices());
+            vector<int> dist(graph.getNumvertices());
+            vector<int> BFS = graph.BFS(start, pred, dist);
+
+            int nextNode = end;
+            vector<int> path;
+            path.push_back(nextNode);
+            cout << "The path found from " << start << " to " << end << " was: " << endl;
+
+            while (nextNode != start) {
+                nextNode = pred[nextNode];
+                path.push_back(nextNode);
+            }
+            for (int i = path.size() - 1; i > 0; i--) {
+                cout << path[i] << " -> ";
+            }
+            cout << path[0];
+
+            cout << "\n\n\nHere are the distances and paths to all other nodes in the graph: \n\n";
+
+            cout << "Vertices   " << '|' << setfill(' ') << setw(23) << "Distances from " << start << setfill(' ') << setw(7 - to_string(start).length()) << "|" << setfill(' ') << setw(20) << "Previous Vertex" << endl;
+            for (unsigned int i = 0; i < dist.size(); i++)
+            {
+                cout << i << setfill(' ') << setw(12 - to_string(i).length());
+                cout << '|' << setfill(' ') << setw(15) << dist[i];
+                cout << setfill(' ') << setw(15) << '|' << setfill(' ') << setw(15) << pred[i] << endl;
+            }
             break;
         }
         case 4:
@@ -463,16 +496,44 @@ int main()
                     cout << "This is not a valid start vertex, try again." << endl;
                     continue;
                 }
+
                 cout << "What is the end vertex: ";
                 cin >> end;
                 if (end < graph.getNumvertices() && end >= 0)
-                    endValid = true;
+                    startValid = true;
                 else
+                {
                     cout << "This is not a valid end vertex, try again." << endl;
+                    continue;
+                }
             }
-            vector<int> DFS = graph.DFS(start, end);
-            for (int i : DFS)
-                cout << i << endl;
+            vector<int> pred(graph.getNumvertices());
+            vector<int> dist(graph.getNumvertices());
+            vector<int> DFS = graph.DFS(start, pred, dist);
+
+            int nextNode = end;
+            vector<int> path;
+            path.push_back(nextNode);
+            cout << "The path found from " << start << " to " << end << " was: " << endl;
+
+            while (nextNode != start) {
+                nextNode = pred[nextNode];
+                path.push_back(nextNode);
+            }
+            for (int i = path.size() - 1; i > 0; i--) {
+                cout << path[i] << " -> ";
+            }
+            cout << path[0];
+
+            cout << "\n\n\nHere are the distances and paths to all other nodes in the graph: \n\n";
+
+            cout << "Vertices   " << '|' << setfill(' ') << setw(23) << "Distances from " << start << setfill(' ') << setw(7 - to_string(start).length()) << "|" << setfill(' ') << setw(20) << "Previous Vertex" << endl;
+            for (unsigned int i = 0; i < dist.size(); i++)
+            {
+                cout << i << setfill(' ') << setw(12 - to_string(i).length());
+                cout << '|' << setfill(' ') << setw(15) << dist[i];
+                cout << setfill(' ') << setw(15) << '|' << setfill(' ') << setw(15) << pred[i] << endl;
+            }
             break;
         }
         case 5:
@@ -491,7 +552,7 @@ int main()
                 if ((*iter).second == mostConnected)
                     vertex = (*iter).first;
             }
-            cout << "Most connected Vertex was " << mostConnected << " (Vertex name " << vertex << ")" ;
+            cout << "Most connected Vertex was " << mostConnected << " (Vertex name " << vertex << ")";
             cout << " with " << numConnections << " connections" << endl;
             break;
         }
