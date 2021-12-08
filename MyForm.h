@@ -150,7 +150,7 @@ namespace GoogleGraph1 {
 			this->button5->TabIndex = 5;
 			this->button5->Text = L"Mapping of vertices";
 			this->button5->UseVisualStyleBackColor = true;
-			this->button6->Click += gcnew System::EventHandler(this, &MyForm::button5_Click);
+			this->button5->Click += gcnew System::EventHandler(this, &MyForm::button5_Click);
 			// 
 			// button6
 			// 

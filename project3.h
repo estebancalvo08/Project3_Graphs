@@ -14,6 +14,7 @@
 #include <limits.h>
 #include <iomanip>
 #include <chrono>
+#include "RandomVertex.h"
 using namespace std;
 using namespace chrono;
 
@@ -34,9 +35,9 @@ public:
     int getNumvertices() { return numVertices; }
     //Overloaded the functions to either traverse the whole graph from initial vertex inserted, or from specified position 
     vector<pair<int, int>> Dijkstra(int start);
-    vector<int> BFS();
+    void BFS(int start, int end);
     vector<int> BFS(int start, int end, vector<int>& pred, vector<int>& dist);
-    vector<int> DFS();
+    void DFS(int start, int end);
     vector<int> DFS(int start, int end, vector<int>& pred, vector<int>& dist);
     //returns the degree of a vertex. Since undirected, in degree = out degree
     vector<int> degree();
@@ -151,8 +152,8 @@ vector<pair<int, int>> Graph::Dijkstra(int start)
     return distances;
 }
 
-//Traverses from the first vertex inserted to the rest of the graph
-vector<int> Graph::BFS()
+//Searches from specified start to end, does not keep track (for stats)
+void Graph::BFS(int start, int end)
 {
     queue<int> q;
     vector<bool> visited;
@@ -173,10 +174,12 @@ vector<int> Graph::BFS()
                 q.push(i);
                 visited[i] = 1;
             }
+            if (curr == end)
+                return;
         }
     }
-    return sol;
 }
+
 
 //Overloaded to start from a start vertex until it reaches the target
 vector<int> Graph::BFS(int start, int end, vector<int>& pred, vector<int>& dist)
@@ -211,8 +214,8 @@ vector<int> Graph::BFS(int start, int end, vector<int>& pred, vector<int>& dist)
     return sol;
 }
 
-//Traverses from the first vertex inserted to the rest of the graph
-vector<int> Graph::DFS()
+//DFS for stats, looks for start and target but does not keep track
+void Graph::DFS(int start, int end)
 {
     stack<int> s;
     vector<bool> visited;
@@ -234,10 +237,11 @@ vector<int> Graph::DFS()
                 s.push(i);
                 visited[i] = 1;
             }
+            if (curr == end)
+                return;
 
         }
     }
-    return sol;
 }
 
 //Overloaded to start from a start vertex until it reaches the target
@@ -309,7 +313,6 @@ void Graph::loadFromFile(string filename) {
             istringstream stringStream(line);
             getline(stringStream, from, ' ');
             getline(stringStream, to, ' ');
-
             insertEdge(from, to);
         }
         cout << "File Input from " << filename << " successful." << endl;
@@ -321,8 +324,10 @@ void DijkstraStats(Graph& graph, int count)
 {
     if (count <= 0)
         return;
+    //get a random start vertex
+    int startV = RandomVertex::Int(0, graph.getNumvertices() - 1);
     auto start = high_resolution_clock::now();
-    graph.Dijkstra(0);
+    graph.Dijkstra(startV);
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start);
     cout << "Time taken for Dijkstra: " << duration.count() << " microseconds" << endl;
@@ -334,8 +339,11 @@ void BFS_Stats(Graph& graph, int count)
 {
     if (count <= 0)
         return;
+    //get a random start vertex and end vertex
+    int startV = RandomVertex::Int(0, graph.getNumvertices() - 1);
+    int endV = RandomVertex::Int(0, graph.getNumvertices() - 1);
     auto start = high_resolution_clock::now();
-    graph.BFS();
+    graph.BFS(startV, endV);
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start);
     cout << "Time taken for BFS: " << duration.count() << " microseconds" << endl;
@@ -347,8 +355,11 @@ void DFS_Stats(Graph& graph, int count)
 {
     if (count <= 0)
         return;
+    //get a random start vertex and end vertex
+    int startV = RandomVertex::Int(0, graph.getNumvertices() - 1);
+    int endV = RandomVertex::Int(0, graph.getNumvertices() - 1);
     auto start = high_resolution_clock::now();
-    graph.DFS();
+    graph.DFS(startV, endV);
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(end - start);
     cout << "Time taken for DFS: " << duration.count() << " microseconds" << endl;
