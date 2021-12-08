@@ -1,0 +1,3 @@
+C:\Users\Esteban\source\repos\GoogleGraph1\GoogleGraph1\Debug\GoogleGraph1.vcxprojAssemblyReference.cache
+C:\Users\Esteban\source\repos\GoogleGraph1\GoogleGraph1\Debug\GoogleGraph1.MyForm.resources
+C:\Users\Esteban\source\repos\GoogleGraph1\GoogleGraph1\Debug\GoogleGraph1.vcxproj.GenerateResource.cache
